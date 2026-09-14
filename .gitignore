@@ -1,0 +1,16 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+
+# --- Herramientas de profesor ---
+# NO se publica;
+profe/
+U2_T4_Casos_de_estudio.ipynb
+
+# --- Estado del equipo en pruebas locales ---
+equipo_u2t4.json
+
+# --- Sistema ---
+.DS_Store
+Thumbs.db
