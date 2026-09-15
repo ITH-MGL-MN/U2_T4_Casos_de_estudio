@@ -149,7 +149,16 @@ def newton_sistema(F, x0, _x1=None, tol=1e-6, max_iter=100, J=None):
 
 
 # ===========================================================================
-# 5) PRUEBAS LOCAL (python metodos_equipo.py)
+# 5) BANCO DE PRUEBAS (python metodos_equipo.py)
+#
+#   ¿PARA QUÉ SIRVE ESTE BLOQUE?
+#   Para comprobar que TUS métodos están bien programados, usando una función
+#   conocida (x^2 - 2, cuya raíz es sqrt(2)). Así los depuras en tu computadora
+#   sin abrir Colab.
+#
+#   NO sirve para elegir el intervalo de TU proyecto: el intervalo se elige con
+#   el ANÁLISIS GRÁFICO en el notebook (sección 5), porque ahí están la ecuación
+#   y los parámetros de tu caso. Este banco de pruebas no tiene que ver con eso.
 # ===========================================================================
 if __name__ == '__main__':
     esperado = np.sqrt(2)

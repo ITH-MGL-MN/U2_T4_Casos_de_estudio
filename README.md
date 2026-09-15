@@ -162,7 +162,11 @@ Aprovechamos para que aprendan a trabajar como equipo con **Google Drive para es
 
 ## 7. Estructura del notebook de Colab (ya construido)
 
-`U2_T4_Casos_de_estudio.ipynb` — **33 celdas** (16 markdown + 17 código), generadas por `generar_notebook.py`.
+`U2_T4_Casos_de_estudio.ipynb` — **36 celdas**.
+
+> 🛠️ **El notebook se edita directamente en VS Code**: es la fuente de verdad (ya trae
+> ajustes manuales). El antíguo `generar_notebook.py` está **desactivado** porque
+> regenerar sobrescribía esas ediciones.
 
 | Sección | Celdas | Contenido |
 |---|---|---|
@@ -172,12 +176,21 @@ Aprovechamos para que aprendan a trabajar como equipo con **Google Drive para es
 | **2. Integrantes** | 11–15 | Selectores según el tamaño · **Registrar equipo** · **Eliminar equipo** (seguro). |
 | **3. Tu caso** | 16–17 | Muestra **solo tu proyecto**: incógnita, ecuación en LaTeX, incertidumbres y métodos sugeridos. |
 | **4. Librería del equipo** | 18–19 | Carga `lib/metodos_equipo.py` desde Drive + `recargar_libreria()`. |
-| **5. Definición simbólica** | 20–21 | `sympy`: ecuación, derivada o **Jacobiano**, `lambdify`. |
-| **6. Tus métodos** | 22–23 | Registro `METODOS` (adaptadores) + detección automática con `inspect`. |
-| **7. Monte Carlo** | 24–25 | `evaluar_tema(...)`: $N=1000$ muestras y tabla de métricas por método. |
-| **8. Gráficos** | 26–29 | Histograma + % divergencia · ⭐ **box plot** · distribución de la respuesta física. |
-| **9. Conclusiones** | 30–31 | **5 preguntas**: 2 resueltas con las métricas reales (las juzga el oráculo) + 3 conceptuales con clave oculta. |
-| **10. Calificación y envío** | 32–33 | `calificar` + **consejos automáticos** + `enviar_resultado` (acción `proyecto_resultado`). |
+| **5. Análisis del caso** | 20–24 | `sympy`: ecuación, derivada o **Jacobiano**, `lambdify` · **✍️ derivada a mano** verificada contra sympy · **🔍 aislamiento** de la raíz (gráfica + cambio de signo) |
+| **6. Tus métodos** | 25–26 | Registro `METODOS` (adaptadores) + detección automática con `inspect`. |
+| **7. Monte Carlo** | 27–28 | `evaluar_tema(...)`: $N=1000$ muestras y tabla de métricas por método. |
+| **8. Gráficos** | 29–32 | Histograma + % divergencia · ⭐ **box plot** · distribución de la respuesta física. |
+| **9. Conclusiones** | 33–34 | **5 preguntas**: 2 resueltas con las métricas reales (las juzga el oráculo) + 3 conceptuales con clave oculta. |
+| **10. Calificación y envío** | 35–36 | `calificar` + **consejos automáticos** + `enviar_resultado` (acción `proyecto_resultado`). |
+
+### 7.0 Notación matemática en pantalla
+
+Los símbolos se llaman en el **código** con nombres ASCII simples (`th1`, `omega`, `eps`)
+pero **se imprimen** con notación matemática ($\theta_1$, $\omega$, $\varepsilon$) gracias a
+la subclase `_Symb` de `profe/grader.py` (solo redefine `_latex`; `str()`, `lambdify()` y los
+cálculos no cambian). El mapeo nombre→LaTeX es **1 a 1** (`_LATEX`) porque los símbolos de
+SymPy se cachean por `(clase, nombre, hipótesis)`: pedir el mismo nombre con dos LaTeX
+distintos reutilizaría el objeto. Por eso T6 usa `TA` (no `T`) y T10/T17 usan `omega` (no `w`).
 
 **Archivos que se publican** (el resto está en `.gitignore`):
 
@@ -194,12 +207,18 @@ Aprovechamos para que aprendan a trabajar como equipo con **Google Drive para es
 
 ```powershell
 # Dentro de la carpeta de la tarea, con el venv del curso:
-python profe/verificar_temas.py     # valida los 19 temas (1 raíz por intervalo, f(raíz)≈0)
-python generar_notebook.py          # regenera U2_T4_Casos_de_estudio.ipynb
-python profe/verificar_notebook.py  # JSON válido + las 17 celdas de código compilan
-python profe/simular_notebook.py    # EJECUTA las celdas analíticas con datos reales (T1, T4, T14)
-python profe/ofuscar.py             # regenera grader_ofuscado.txt (hacerlo al final)
+python profe/verificar_temas.py           # valida los 19 temas (1 raíz por intervalo, f(raíz)≈0)
+python profe/verificar_notebook.py        # JSON válido + TODAS las celdas de código compilan
+python profe/simular_notebook.py          # EJECUTA las celdas analíticas (T1, T4, T14) con datos reales
+python profe/diagnostico_arranques.py     # tabla de % de fallo e iteraciones por método (19 temas)
+python profe/ofuscar.py                   # regenera grader_ofuscado.txt (hacerlo al final)
+
+# OJO: generar_notebook.py está DESACTIVADO (sobrescribiría el notebook actual).
 ```
+
+> ⚠️ `profe/simular_notebook.py` **debe** ejecutar `lib/matlab_like.py` en sus globals,
+> porque ese archivo hace `from numpy import *` y PISA `max`/`min`/`abs`/`any`/`all`/`sum`.
+> Sin ese detalle el simulacro no reproduce los fallos reales del notebook.
 
 ---
 
@@ -332,6 +351,52 @@ Al final, el notebook envía una sola petición:
 ```
 
 `alcance`: `"alumno"` escribe solo la fila del NC; `"equipo"` replica el resultado a **todos** los integrantes (lo natural en un proyecto de equipo).
+
+### 8.7 · Cómo se generan los arranques y cuándo un método "cuenta"
+
+**Error de aislamiento compartido.** No se favorece a ningún método: a todos se les da **la
+misma información** — la estimación `x_est` que el alumno obtiene al graficar:
+
+- 85 % de las muestras: aislamiento **cuidadoso**, `|x_est − raíz| ≤ 0.15 · ancho`.
+- 15 % de las muestras: aislamiento **deficiente**, `|x_est − raíz| = 0.30 … 1.20 · ancho`.
+- `p0 = x_est` (lo usan los métodos **abiertos**, como `x0`).
+- `p1 = x_est ± 0.25 · ancho`, sondeando hacia la raíz (lo usan los **cerrados**, como intervalo).
+
+Así, un aislamiento cuidadoso **siempre** encierra la raíz y uno deficiente **nunca**: el fallo
+de bisección/falsa posición es atribuible al aislamiento (información compartida), no a un
+defecto artificial. Los abiertos quedan expuestos a su propia inestabilidad, que **depende del
+tema** (en T1 el máximo anula la derivada; en T13 Newton-Raphson diverge si `x0 > 0.066`;
+en T6 la catenaria desborda).
+
+**Criterio de éxito (tolerancia mixta).** Un método cuenta la muestra si
+`|x − x*| ≤ max(1e-4 · |x*|, 1e-6)`, es decir, acierta dentro del error **relativo** pedido
+**o** dentro de la tolerancia **absoluta** que se le pasó al método (`1e-6`). Sin la parte
+absoluta, raíces pequeñas como la de T11 (`2.4 × 10⁻³`) se marcaban como fallo aunque el método
+hubiera cumplido exactamente lo pedido.
+
+**Raíz física.** Cuando el intervalo puede contener varias raíces reales con los parámetros
+perturbados, el tema declara una `estimacion` (T11: el gas ideal, `RT/p`) y el oráculo elige la
+raíz **más cercana** a ella. Así un método que converge a *otra* raíz válida no se marca como fallo.
+
+**Rendimiento.** El oráculo usa la función **vectorizada** (`f_arr`) para el barrido de cambios
+de signo: con la versión escalar, `N=1000` tardaba minutos (≈30 millones de evaluaciones).
+
+**Perillas ajustables** (en `profe/grader.py`): `0.15` (proporción de mal aislamiento),
+`0.25 × ancho` (amplitud del intervalo), `TAU_X` y `TAU_ABS` (tolerancias),
+`UMBRAL_EXITO = 0.80` (porcentaje de muestras para que un método cuente).
+
+**Comportamiento medido** (19 temas × 400 muestras, ver `profe/diagnostico_arranques.py`):
+
+| Método | % fallo | mediana de iteraciones |
+|---|---|---|
+| Newton-Raphson | 7.8 % | 5 |
+| Newton-Raphson multivariable | 9.2 % | 5 |
+| Secante | 9.9 % | 12 |
+| Bisección | 11.1 % | 21 |
+| Falsa posición | 18.0 % | 19 |
+
+La falsa posición sale mal parada por **estancamiento** en T6 (98 % a 100 iteraciones), que es
+justamente la limitación que el curso quiere que vean.
 
 ---
 

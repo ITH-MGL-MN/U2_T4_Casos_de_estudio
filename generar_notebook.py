@@ -7,6 +7,16 @@ Estructura:
   -> Monte Carlo -> Gráficos (histogramas, % divergencia, box plots, respuesta física)
   -> Conclusiones -> Calificación y envío
 """
+# ⚠️ DESACTIVADO (2026-09-14).
+# El notebook U2_T4_Casos_de_estudio.ipynb se edita DIRECTAMENTE en VS Code: es la
+# fuente de verdad y ya tiene ediciones manuales del profesor. Ejecutar este script
+# lo SOBRESCRIBIRIA POR COMPLETO y borraría esos cambios.
+# Se conserva solo como referencia histórica de cómo se armó la plantilla.
+# Si de verdad se quiere regenerar desde cero, borra el raise siguiente.
+raise SystemExit(
+    'generar_notebook.py está DESACTIVADO: edita U2_T4_Casos_de_estudio.ipynb directamente.'
+)
+
 import json
 
 nb = {
@@ -484,7 +494,15 @@ md("""---
 # 5. Definición simbólica del problema
 
 Con `sympy` construimos la función del caso, su **derivada** (o el **Jacobiano** si es un
-sistema) y las pasamos a funciones rápidas con `lambdify`.""")
+sistema) y las pasamos a funciones rápidas con `lambdify`.
+
+> 📝 **Sobre los nombres.** En el **código** las variables se llaman con letras normales
+> (`th1`, `omega`, `eps`), pero **en pantalla** se muestran como notación matemática
+> ($\\theta_1$, $\\omega$, $\\varepsilon$). Es el mismo símbolo: en el código usa siempre
+> el nombre normal.
+
+> ✍️ Ya cursaron cálculo diferencial, así que **la derivada se obtiene a mano** y luego se
+> comprueba contra `sympy`. La celda siguiente sirve justo para eso.""")
 
 code(r'''# @title Definición simbólica y funciones numéricas
 import numpy as np
@@ -496,22 +514,89 @@ ES_SISTEMA = MODELO['sistema']
 
 if ES_SISTEMA:
     syms, exprs, sym_params = MODELO['sym']
-    J_sym = sp.Matrix(exprs).jacobian(syms)
+    F_OFICIAL = exprs
+    J_OFICIAL = sp.Matrix(exprs).jacobian(syms)
     display(Markdown('**Sistema de ecuaciones** $F(\\mathbf{x})=\\mathbf{0}$:'))
     for e in exprs:
         display(sp.Eq(e, 0))
     display(Markdown('**Jacobiano** $J=\\partial F/\\partial \\mathbf{x}$:'))
-    display(J_sym)
-    _vars = syms
+    display(J_OFICIAL)
 else:
     x_sym, expr, sym_params = MODELO['sym']
-    display(Markdown('**Ecuación** $f(%s)=0$:' % x_sym))
+    D_OFICIAL = sp.simplify(sp.diff(expr, x_sym))
+    display(Markdown('**Ecuación** $f(%s)=0$:' % sp.latex(x_sym)))
     display(sp.Eq(expr, 0))
     display(Markdown('**Derivada** $f\'$:'))
-    display(sp.simplify(sp.diff(expr, x_sym)))
+    display(D_OFICIAL)
 
-print('\nParámetros del caso:', list(MODELO['params']))
+# Alias cómodos: ahora puedes escribir th1, omega, x, ... directamente
+for _n, _s in zip(MODELO['vars'], (syms if ES_SISTEMA else [x_sym])):
+    globals()[_n] = _s
+print('Variables disponibles:', ', '.join(MODELO['vars']))
+print('Parámetros del caso:', list(MODELO['params']))
 print('Valores iniciales de referencia:', MODELO['info'].get('x0', MODELO['info'].get('intervalo')))''')
+
+code(r'''# @title ✍️ Verifica a mano tu derivada (o tu Jacobiano)
+# Obtén la derivada A MANO, escríbela aquí con sympy y compárala con la de sympy.
+# Para una ecuación usa la variable con su nombre normal (th, omega, x, ...).
+from IPython.display import display, Markdown
+
+MI_DERIVADA  = None      # <-- p. ej.:  -2*sp.exp(-2*x) + sp.cos(x)
+MI_JACOBIANO = None      # <-- solo si tu caso es un sistema, p. ej.: sp.Matrix([[0, -1], [1, 0]])
+
+if not EQUIPO:
+    print('⛔ Todavía no tienes tema asignado.')
+elif ES_SISTEMA:
+    if MI_JACOBIANO is None:
+        print('Escribe tu MI_JACOBIANO (una sp.Matrix) en lugar de None.')
+        print('El Jacobiano de sympy tiene forma', J_OFICIAL.shape)
+    else:
+        try:
+            _tu = sp.Matrix(MI_JACOBIANO)
+            _dif = _tu - J_OFICIAL
+            display(Markdown('**Diferencia (tu Jacobiano − el de sympy):**'))
+            display(_dif.applyfunc(sp.simplify))
+            _n_f, _n_c = J_OFICIAL.shape
+            _errs = [sp.simplify(_dif[i, j]) for i in range(_n_f) for j in range(_n_c)]
+            if np.all([e == 0 for e in _errs]):
+                print('✅ Se comprobó simbólicamente: tu Jacobiano coincide con el de sympy.')
+            else:
+                print('❌ No coincide. Las entradas distintas de cero de la diferencia te dicen cuáles revisar.')
+        except Exception as _e:
+            print('⚠️ No pude comprobar tu Jacobiano:', _e)
+else:
+    if MI_DERIVADA is None:
+        print('Escribe tu MI_DERIVADA (una expresión de sympy) en lugar de None.')
+        print('La derivada de sympy es:')
+        display(D_OFICIAL)
+    else:
+        try:
+            _dif = sp.simplify(D_OFICIAL - MI_DERIVADA)
+            display(Markdown('**Diferencia (tu derivada − la de sympy), simplificada:**'))
+            display(_dif)
+            # Comprobación numérica en 3 puntos del intervalo (por si simplify no logra probarlo)
+            _nom = {n: (s[1] if s[0] == 'n' else 0.5 * (s[1] + s[2])) for n, s in INFO['params'].items()}
+            _vals = [_nom[n] for n in MODELO['params']]
+            _lo, _hi = INFO['intervalo']
+            _f_of = sp.lambdify([x_sym, list(sym_params.values())], D_OFICIAL, 'numpy')
+            _f_mi = sp.lambdify([x_sym, list(sym_params.values())], MI_DERIVADA, 'numpy')
+            _err = []
+            for _k in (0.25, 0.5, 0.75):
+                _xv = _lo + _k * (_hi - _lo)
+                _a = abs(float(_f_of(_xv, _vals)))
+                _b = float(_f_mi(_xv, _vals))
+                _err.append(abs(_b - _a) / np.maximum(_a, 1e-12))
+            _peor = float(np.max(_err))
+            print('Error relativo máximo en 3 puntos: %.3e' % _peor)
+            if _dif == 0 or _peor < 1e-8:
+                print('✅ Tu derivada es correcta.')
+                df_num = sp.lambdify(x_sym, MI_DERIVADA, 'numpy')
+                print('   Quedó guardada como df_num: úsala en la sección 6 para Newton-Raphson.')
+            else:
+                print('❌ Todavía no coincide: revisa la regla de derivación (producto, cadena, cociente...).')
+        except Exception as _e:
+            print('⚠️ No pude comprobar tu derivada:', _e)
+            print('   Asegúrate de escribirla con el nombre normal de la variable (th, omega, x, ...).')''')
 
 md("""---
 # 6. Tus métodos (el registro `METODOS`)
@@ -524,7 +609,18 @@ Aquí se **declara** qué métodos implementaron. Cada entrada es un *adaptador*
 
 **Familias:** *cerrado* = Bisección, Falsa posición, PFM · *abierto* = Punto fijo,
 Newton-Raphson, NR modificado, Secante, Secante modificado · *híbrido* = Brent ·
-*polinomios* = Müller, Bairstow.""")
+*polinomios* = Müller, Bairstow.
+
+> ⚠️ **Ojo al escribir código en estas celdas.** La configuración carga
+> `matlab_like` con sintaxis estilo MATLAB (`from numpy import *`), así que
+> `max`, `min`, `abs`, `any`, `all` y `sum` **son los de NumPy, no los de Python**.
+> Concretamente: `max(a, b)` **falla** (`TypeError`) porque NumPy lo interpreta como
+> un eje. Para comparar **dos valores** usa:
+> ```python
+> np.maximum(a, b)   # en vez de max(a, b)
+> np.minimum(a, b)   # en vez de min(a, b)
+> ```
+> (Dentro de `lib/metodos_equipo.py` no hay problema: es un módulo aparte.)""")
 
 code(r'''# @title Registro de métodos del equipo
 if ES_SISTEMA:
@@ -539,6 +635,9 @@ else:
         'Bisección':      lambda f, p0, p1, tol, it: equipo_lib.biseccion(f, p0, p1, tol, it),
         'Falsa posición': lambda f, p0, p1, tol, it: equipo_lib.falsa_posicion(f, p0, p1, tol, it),
         'Newton-Raphson': lambda f, p0, p1, tol, it: equipo_lib.newton_raphson(f, p0, tol=tol, max_iter=it),
+        # Si verificaste tu derivada a mano (sección 5), úsala en vez de la numérica:
+        # 'Newton-Raphson (derivada a mano)':
+        #     lambda f, p0, p1, tol, it: equipo_lib.newton_raphson(f, p0, tol=tol, max_iter=it, df=df_num),
         'Secante':        lambda f, p0, p1, tol, it: equipo_lib.secante(f, p0, p1, tol, it),
         # 'Brent':        lambda f, p0, p1, tol, it: equipo_lib.brent(f, p0, p1, tol, it),
         # 'Müller':       lambda f, p0, p1, tol, it: equipo_lib.muller(f, p0, p1, tol, it),
@@ -594,7 +693,8 @@ code(r'''# @title Histograma de iteraciones y % de divergencia
 import matplotlib.pyplot as plt
 
 _met = list(RES['metodos'].keys())
-_col = plt.cm.tab10(np.linspace(0, 1, max(len(_met), 2)))
+_n_col = len(_met) if len(_met) >= 2 else 2
+_col = plt.cm.tab10(np.linspace(0, 1, _n_col))
 
 fig, ax = plt.subplots(1, 2, figsize=(14, 4.5))
 for i, m in enumerate(_met):
@@ -616,7 +716,10 @@ plt.tight_layout(); plt.show()''')
 code(r'''# @title ⭐ Box plot comparativo de iteraciones
 # Muestra mediana, dispersión y outliers: se ve de inmediato por qué un método
 # es mejor que otro (menos iteraciones y menos dispersión).
-fig, ax = plt.subplots(figsize=(max(7, 1.6 * len(_met)), 5))
+_ancho = 1.6 * len(_met)
+if _ancho < 7:
+    _ancho = 7
+fig, ax = plt.subplots(figsize=(_ancho, 5))
 _datos = [RES['metodos'][m]['n_iter'][np.isfinite(RES['metodos'][m]['n_iter'])] for m in _met]
 bp = ax.boxplot(_datos, patch_artist=True, showfliers=True)
 for i, caja in enumerate(bp['boxes']):
