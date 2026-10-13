@@ -1,0 +1,39 @@
+# =====================================================================
+#  Bancos de opción múltiple de U2_T4.
+# ---------------------------------------------------------------------
+#  Estas preguntas de criterio ya NO se autocalifican: son parte del
+#  INFORME y de la EXPOSICIÓN (se revisan a mano). Viven aquí para que todo
+#  el texto visible quede en archivos, igual que en U2_T3B.
+# =====================================================================
+
+criterio:
+  C1:
+    pregunta: "Si tuvieras que garantizar SIEMPRE una raíz (aunque tarde), ¿qué familia elegirías?"
+    opciones:
+      - "Un método de intervalo (bisección / falsa posición)"
+      - "Un método abierto (secante / Newton-Raphson)"
+      - "Cualquiera, todos garantizan convergencia"
+    correcta: 0
+  C2:
+    pregunta: "¿Qué necesitas además de f(x) para aplicar Newton-Raphson?"
+    opciones:
+      - "Un intervalo con cambio de signo"
+      - "La derivada f'(x)"
+      - "Dos valores iniciales distintos"
+    correcta: 1
+  C3:
+    pregunta: "Un método marca 'convergió' porque |x_{k+1}-x_k| < tol. ¿Eso prueba que x es una raíz?"
+    opciones:
+      - "Sí, el criterio de paso es suficiente"
+      - "No: hay que verificar el residuo |f(x)| y comparar con una referencia"
+      - "Solo si el método es abierto"
+    correcta: 1
+
+# Familias de métodos (las usa el motor para validar la selección). Se deja
+# aquí documentada por claridad; la fuente de verdad es profe/core/catalogo.py.
+familias:
+  cerrado:   ["Bisección", "Falsa posición", "Punto fijo modificado"]
+  abierto:   ["Newton-Raphson", "Newton-Raphson multivariable", "Punto fijo",
+              "NR modificado", "Secante", "Secante modificado"]
+  hibrido:   ["Brent"]
+  polinomios: ["Müller", "Bairstow"]

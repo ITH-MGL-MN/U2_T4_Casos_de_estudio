@@ -1,0 +1,58 @@
+# =====================================================================
+#  Configuración de la tarea U2_T4 — Proyecto: casos de estudio de raíces
+#  de ecuaciones + Monte Carlo.
+# ---------------------------------------------------------------------
+#  Formato "más reciente" (heredera de U2_T3B): todo lo que se ajusta sin
+#  tocar código vive aquí. Los enunciados de los casos están en
+#  profe/core/catalogo.py (el catálogo T1–T19), los bancos de opción
+#  múltiple en config/preguntas.yaml y los textos de las preguntas de
+#  criterio en profe/evaluador/*.md (NUNCA en el .py).
+#
+#  A diferencia de U2_T3B, aquí NO hay semilla por alumno: cada EQUIPO elige
+#  su caso. La calificación automática se reduce a UNA sola cosa: que el
+#  equipo haya SELECCIONADO al menos los métodos correctos de su caso (y al
+#  menos un contraejemplo). Todo lo demás (interpretación de las gráficas,
+#  informe y exposición) se revisa a mano.
+# =====================================================================
+tarea:
+  # `id` es el nombre de la PESTAÑA de la hoja de cálculo (el Apps Script la
+  # crea sola la primera vez). NO depende de semilla por alumno.
+  id: "U2_T4"
+  nombre: "Unidad 2 - Tarea 4: Casos de estudio (raíces + Monte Carlo)"
+  materia: "Métodos Numéricos"
+
+ponderacion:
+  # Lo ÚNICO automático es la selección de métodos. El resto lo evalúa el
+  # profesor a mano (informe, interpretación de gráficas y exposición).
+  automatico: 1.0
+  manual: 1.0
+
+evaluacion:
+  tolerancia_simple: 1e-4          # respuestas numéricas (relativa)
+  tolerancia_funcion: 1e-4         # raíz comparada contra el oráculo
+  min_aprobacion: 0.0              # sin umbral automático de aprobación
+  max_intentos: 2                  # envíos permitidos (lo impone el Apps Script)
+  max_iter: 100                    # lo lee el motor
+  criterios_paro: [1e-6]           # tolerancia de los métodos iterativos
+  accion: "guardar"
+  # ⚠️ REEMPLAZAR por los valores reales al configurar el Apps Script de U2_T4.
+  webhook_token: "43f6f220-fc6e-4972-a69e-a11b54a629ec"
+  apps_script_url: "https://script.google.com/macros/s/AKfycbzD5k2BVwJ6pHjBgbc3-f1pbV9zrX0AloZfPiCyHSrsRZ7Kfno6ZQOnqzEbTikVlO6lRQ/exec"
+
+# Regla de la calificación automática: SOLO se autocalifica la selección de
+# métodos. El equipo debe:
+#   1) incluir TODOS los métodos sugeridos de su caso (`metodos_sugeridos`), y
+#   2) incluir al menos `min_contraejemplos` método(s) que NO estén sugeridos
+#      (los "contraejemplos": métodos que en ese caso no funcionan bien y que
+#      sirven para contrastar en el informe). En los casos de SISTEMA esto no
+#      se exige: solo hay 2 métodos disponibles y ambos son sugeridos.
+seleccion:
+  requiere_todos_sugeridos: true
+  min_contraejemplos: 1            # solo se exige en casos ESCALARES (los de
+                                   # SISTEMA tienen 2 opciones y ambas son
+                                   # sugeridas, así que quedan exentos)
+  min_familias_distintas: 3        # mínimo de familias representadas (cerrado/abierto/híbrido/polinomios)
+
+monte_carlo:
+  N: 1000                          # muestras de la simulación
+  umbral_exito: 0.80               # % de aciertos para que un método "cuente"
