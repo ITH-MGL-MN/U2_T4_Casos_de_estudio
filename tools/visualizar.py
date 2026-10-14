@@ -64,7 +64,10 @@ def graficar_histograma(RES):
                       row=1, col=1)
 
     div = [100 * RES['metodos'][m]['pct_diverge'] for m in mets]
-    fig.add_trace(go.Bar(x=mets, y=div,
+    # Con nombre propio y fuera de la leyenda: sin `name`, Plotly etiquetaba esta
+    # barra como "trace 4" (en la leyenda y al pasar el cursor), porque es la
+    # traza siguiente a los histogramas. El título del subgráfico ya la explica.
+    fig.add_trace(go.Bar(x=mets, y=div, name='% divergencia', showlegend=False,
                          marker_color=[COLORES[i % len(COLORES)] for i in range(len(mets))]),
                   row=1, col=2)
 
@@ -105,7 +108,8 @@ def graficar_distribucion(RES, modelo=None, es_sistema=False):
             'Distribución de %s' % nombres[j] for j in range(nvar)])
         for j in range(nvar):
             col = ref[np.isfinite(ref[:, j]), j]
-            fig.add_trace(go.Histogram(x=col, marker_color='teal', opacity=0.75),
+            fig.add_trace(go.Histogram(x=col, name=nombres[j],
+                                       marker_color='teal', opacity=0.75),
                           row=1, col=j + 1)
             fig.update_xaxes(title_text=nombres[j], row=1, col=j + 1)
     else:
@@ -113,8 +117,10 @@ def graficar_distribucion(RES, modelo=None, es_sistema=False):
         nombre = modelo['vars'][0] if modelo else 'x'
         fig = make_subplots(rows=1, cols=2, subplot_titles=(
             'Distribución de la raíz física (%s)' % nombre, 'Dispersión de la respuesta física'))
-        fig.add_trace(go.Histogram(x=rr, marker_color='teal', opacity=0.75), row=1, col=1)
-        fig.add_trace(go.Box(x=rr, marker_color='teal'), row=1, col=2)
+        # Con `name`, el cursor muestra la etiqueta en vez de "trace 0" / "trace 1".
+        fig.add_trace(go.Histogram(x=rr, name='frecuencia de %s' % nombre,
+                                   marker_color='teal', opacity=0.75), row=1, col=1)
+        fig.add_trace(go.Box(x=rr, name='dispersión', marker_color='teal'), row=1, col=2)
         fig.update_xaxes(title_text=nombre, row=1, col=1)
     fig.update_layout(template='plotly_white', height=450, showlegend=False)
     return fig

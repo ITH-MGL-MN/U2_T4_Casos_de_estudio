@@ -18,6 +18,10 @@ notebooklm/
 # --- Estado del equipo en pruebas locales ---
 equipo_u2t4.json
 
+# --- Archivos que generan los botones de las gráficas (descarga / HTML) ---
+grafica_u2t4*.png
+u2t4_grafica_*.html
+
 # --- Sistema ---
 .DS_Store
 Thumbs.db
