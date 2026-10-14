@@ -204,6 +204,38 @@ componentes, ruido de sensores, variación de fabricación y errores al *aislar*
 **Qué se mide, por método:** `% éxito`, `% divergencia`, `n_iter` (velocidad) y `err_ref`
 (distancia a la raíz verdadera).
 
+### ¿Por qué falló cada método? (no todo es "divergencia")
+
+Un fallo no siempre significa lo mismo, así que la simulación **clasifica el motivo** de cada
+muestra y el cuaderno lo imprime:
+
+| Motivo | Qué pasó |
+|---|---|
+| `ok` | acertó la raíz física |
+| **no arrancó** | el intervalo no encerraba la raíz. **No es divergencia del método**: es el aislamiento (bisección, falsa posición, punto fijo modificado, Brent) |
+| **se fue al plano complejo** | método abierto con arranque lejano: la parábola/tangente se sale del eje real (Müller) |
+| **convergió a OTRA raíz** | el residuo es ~0, pero la raíz es **distinta** de la física: se quedó atrapado en otra solución |
+| **divergió** | la iteración crece sin límite (p. ej. punto fijo con $\|g'(x)\| \ge 1$, que **por construcción** no converge) |
+| **se estancó** | derivada o denominador nulo: el método ya no puede avanzar |
+| **no convergió** | agotó las iteraciones sin acercarse |
+| **no aplica** | el método no sirve para ese caso (Bairstow sin coeficientes) |
+
+Así se distingue «el método no pudo empezar» de «el método divergió», que es justo lo que
+pide el informe.
+
+### Tu intervalo: `MIS_INTERVALOS`
+
+En la sección 4 del cuaderno hay una celda con `MIS_INTERVALOS` comentado. Si lo defines con un
+intervalo que **encierre la raíz**:
+
+* los métodos que necesitan un paréntesis (**cerrado** e **híbrido**) usan **ese** intervalo en
+  las 1000 muestras, en lugar del arranque con error de aislamiento;
+* el resultado es el contraste buscado: **esos métodos dejan de fallar** (0 % de fallos), lo
+  que demuestra que los fallos venían del **aislamiento**, no del método;
+* los métodos **abiertos** y los de **polinomios** no usan el intervalo (Bairstow, de hecho,
+  espera coeficientes iniciales, no un intervalo).
+
+
 **Gráficas que se generan (interactivas, plotly):**
 
 1. **Histograma de iteraciones** por método.
