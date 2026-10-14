@@ -7,7 +7,7 @@ exacto.
 
 **Al terminar entregarán:**
 
-1. El **notebook de Colab**.
+1. Los **cuadernos de Colab** (`U2_T4_1_Equipo` y `U2_T4_2_Caso`).
 2. Un **informe** con sus **gráficas interactivas (plotly)** y conclusiones.
 3. Una **exposición de 5 a 10 minutos**.
 
@@ -57,19 +57,41 @@ U2_T4_Casos_de_estudio/
 ├── probador.py              inspecciona un caso (uso del profesor)
 ├── grader_local.py          bundle legible (generado por build.py)
 ├── grader_ofuscado.txt      bundle que usa el alumno en Colab
-└── U2_T4_Casos_de_estudio.ipynb
+├── U2_T4_1_Equipo.ipynb     cuaderno 1: jefe, tema e integrantes (una sola vez)
+└── U2_T4_2_Caso.ipynb       cuaderno 2: el ejercicio (Monte Carlo y gráficas)
 ```
 
-> El alumno recibe **solo** el cuaderno y `grader_ofuscado.txt` (además de `lib/` y
-> `tools/visualizar.py`, que el cuaderno necesita). `profe/`, `tools/build.py` y
+> El alumno recibe **solo** los dos cuadernos y `grader_ofuscado.txt` (además de `lib/` y
+> `tools/visualizar.py`, que los cuadernos necesitan). `profe/`, `tools/build.py` y
 > `grader_local.py` son material del profesor.
+
+## Dos cuadernos, no uno
+
+El trabajo está partido en dos a propósito:
+
+| Cuaderno | Quién | Para qué |
+|---|---|---|
+| **`U2_T4_1_Equipo`** | **solo el jefe**, **una vez** | Identificarse, **reservar el tema** y **registrar integrantes** |
+| **`U2_T4_2_Caso`** | **cada integrante** | El **ejercicio**: aislar la raíz, elegir métodos, Monte Carlo y gráficas |
+
+Si la selección de tema e integrantes viviera en el mismo cuaderno del ejercicio, un
+**`Ejecutar todo`** volvería a reservar y a registrar. Al separarlos, **los dos se pueden
+correr de golpe**:
+
+* En el cuaderno 1, ninguna celda reserva ni registra por sí sola: el tema y los integrantes
+  se eligen con **botones**, y hasta que no los pulsas no se guarda nada.
+* En el cuaderno 2 no hay nada que reservar.
+
+El cuaderno 1 guarda `equipo_u2t4.json` (equipo + correo + número de control del jefe) y el
+cuaderno 2 lo **lee**, así que no hay que volver a identificarse. Si el archivo no existe, el
+cuaderno 2 avisa de que hay que ejecutar primero el cuaderno 1.
 
 ---
 
 ## Cómo funciona el motor
 
-El cuaderno carga el motor en **su propio namespace** y de ahí copia **solo** la API que el
-motor declara en su `__all__` (al final de `profe/ui/cuaderno.py`). La celda 1 elige de dónde
+Los **cuadernos** cargan el motor en **su propio namespace** y de ahí copian **solo** la API que el
+motor declara en su `__all__` (al final de `profe/ui/cuaderno.py`). La primera celda elige de dónde
 carga el motor con `MODO_MOTOR`:
 
 | modo | qué carga | para qué |
@@ -102,17 +124,20 @@ Como hay **más temas que equipos**, ningún tema se repite.
 
 ---
 
-## 2. Cómo elegir su caso (se hace una sola vez)
+## 2. Cómo elegir su caso (se hace una sola vez, en el cuaderno 1)
 
-Solo el **jefe de equipo** ejecuta estas celdas, y **una sola vez**:
+Todo esto ocurre en **`U2_T4_1_Equipo`**, y **solo el jefe de equipo** lo ejecuta:
 
-| Paso | Celda del notebook | Qué hace |
+| Paso | Celda | Qué hace |
 |---|---|---|
-| 1 | **Identificación** | Valida el correo institucional y el número de control del jefe |
-| 2 | **Ver temas disponibles** | Muestra los temas **libres** de su bloque |
-| 3 | **Reservar tema** | Bloquea el tema para su equipo |
-| 4 | **Integrantes** | Un selector por integrante, con el jefe ya puesto |
-| 5 | **Registrar equipo** | Guarda al equipo completo |
+| 1 | **Configuración general** | Monta Drive, trae el repositorio y carga el motor |
+| 2 | **Identificación** | Valida el correo institucional y deduce el número de control del jefe |
+| 3 | **Ver temas disponibles** | Muestra los temas **libres** de su bloque |
+| 4 | **Reservar tema** | Bloquea el tema para su equipo (*botón*) |
+| 5 | **Integrantes** | Un selector por integrante, con el jefe ya puesto |
+| 6 | **Registrar equipo** | Guarda al equipo completo (*botón*) |
+
+> ✅ Pueden usar **`Ejecutar todo`**: los pasos 4 y 6 solo ocurren al pulsar su botón.
 
 > ⚠️ **Una vez reservado el tema ya no se puede cambiar.** Si se equivocaron, usen la celda
 > **Eliminar equipo** (`PERMITIR_ELIMINAR = True` y que tu número de control **pertenezca** al
@@ -122,11 +147,12 @@ Solo el **jefe de equipo** ejecuta estas celdas, y **una sola vez**:
 
 ## 3. Trabajo en equipo con Google Drive
 
-1. El jefe **descarga el repositorio** (el notebook lo hace solo en la primera celda) y
+1. El jefe **descarga el repositorio** (el cuaderno lo hace solo en la primera celda) y
    **comparte la carpeta** `CursoMN/U2_T4_Casos_de_estudio` con su equipo.
-2. Dentro de esa carpeta está el **motor** (oculto, en el bundle) y las **gráficas plotly**
-   (`tools/visualizar.py`). Los métodos **ya vienen implementados** y no se editan.
-3. Todo el equipo abre el **mismo cuaderno** y trabaja con la **misma** simulación.
+2. El jefe reserva el tema y registra al equipo en **`U2_T4_1_Equipo`**.
+3. Cada integrante abre **su copia** de **`U2_T4_2_Caso`** y hace ahí el ejercicio completo
+   (el cuaderno lee el equipo ya registrado). Los métodos **ya vienen implementados** y no se
+   editan.
 
 ---
 
@@ -426,7 +452,7 @@ Orden recomendado antes de publicar:
 
 1. `probador.py` para revisar cada caso y su raíz de referencia.
 2. `tools/build.py` → regenerar los dos bundles.
-3. Simular el cuaderno en local (modo `modulos`, `bundle` y `blob`).
+3. Simular los cuadernos en local (modo `modulos`, `bundle` y `blob`).
 4. Configurar el Apps Script de U2_T4 y pegar `webhook_token` y `apps_script_url` en
    `config/config.yaml`.
 
