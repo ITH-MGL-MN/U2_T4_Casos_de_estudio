@@ -15,17 +15,17 @@ criterio:
       - "Cualquiera, todos garantizan convergencia"
     correcta: 0
   C2:
-    pregunta: "¿Qué necesitas además de f(x) para aplicar Newton-Raphson?"
+    pregunta: "¿Qué necesitas además de $f(x)$ para aplicar Newton-Raphson?"
     opciones:
       - "Un intervalo con cambio de signo"
-      - "La derivada f'(x)"
+      - "La derivada $f'(x)$"
       - "Dos valores iniciales distintos"
     correcta: 1
   C3:
-    pregunta: "Un método marca 'convergió' porque |x_{k+1}-x_k| < tol. ¿Eso prueba que x es una raíz?"
+    pregunta: "Un método marca 'convergió' porque $|x_{k+1}-x_k| < tol$. ¿Eso prueba que $x$ es una raíz?"
     opciones:
       - "Sí, el criterio de paso es suficiente"
-      - "No: hay que verificar el residuo |f(x)| y comparar con una referencia"
+      - "No: hay que verificar el residuo $|f(x)|$ y comparar con una referencia"
       - "Solo si el método es abierto"
     correcta: 1
 

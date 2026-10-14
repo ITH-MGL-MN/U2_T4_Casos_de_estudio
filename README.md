@@ -240,6 +240,14 @@ La **autocalificación** verifica, para el caso del equipo:
 
 La regla exacta vive en `config/config.yaml` (sección `seleccion`).
 
+> ⛔ **No se envía si la selección está incompleta.** La celda de envío revisa primero y, si
+> falta algo, **dice qué** y no manda nada (así no se gasta un intento en balde). Se corrige en
+> las casillas de la sección 5 y se vuelve a ejecutar.
+
+Además, la **sección 10** del cuaderno 2 permite **comprobar lo ya guardado**: muestra el tema,
+el estado del equipo y —por integrante— la calificación y los métodos que envió cada quien.
+Esa consulta **no envía nada** ni gasta intentos.
+
 ---
 
 ## 8. Catálogo de casos
