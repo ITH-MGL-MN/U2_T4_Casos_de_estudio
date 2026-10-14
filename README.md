@@ -235,6 +235,28 @@ intervalo que **encierre la raíz**:
 * los métodos **abiertos** y los de **polinomios** no usan el intervalo (Bairstow, de hecho,
   espera coeficientes iniciales, no un intervalo).
 
+> ¿Y por qué con `MIS_INTERVALOS` el éxito es 100 %? Porque en la corrida normal el intervalo
+> **cambia en cada muestra** (se simula el error de aislamiento de un analista); al fijarlo, el
+> **mismo** par de valores vale para las 1000 muestras y, como la incertidumbre del caso mueve
+> la raíz mucho menos que el ancho del intervalo, siempre la contiene.
+
+### Tu arranque: `MIS_ARRANQUES`
+
+En la misma celda de la sección 4 está `MIS_ARRANQUES`, que hace lo mismo pero para los métodos
+que **no** usan intervalo (**abiertos** y **polinómicos**). Los dos números significan, según el
+método:
+
+| Método | Cómo usa `MIS_ARRANQUES = (p0, p1)` |
+|---|---|
+| Newton-Raphson | solo el primero (`p0`) |
+| Secante | los dos (`p0`, `p1`) |
+| Müller | los dos, y su punto medio como tercero |
+| Bairstow | los toma como coeficientes iniciales `(r0, s0)` del factor cuadrático |
+
+El arranque debe estar **cerca de la raíz**: con uno cercano, Müller pasa de 93.3 % a 100 % de
+éxito; con uno lejano, los métodos abiertos fallan **más** (se van al plano complejo o a otra
+raíz). La celda de «Aísla la raíz» imprime los valores sugeridos para tu caso.
+
 
 **Gráficas que se generan (interactivas, plotly):**
 
