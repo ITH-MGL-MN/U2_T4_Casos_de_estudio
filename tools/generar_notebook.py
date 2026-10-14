@@ -6,8 +6,12 @@ Parte del notebook original (flujo de equipos/temas por Apps Script, que se
 conserva) y reemplaza las celdas que cambian en esta entrega:
 
   * celda de configuración: carga el motor con MODO_MOTOR (modulos/bundle/blob)
-  * gráficas: ahora interactivas con plotly (lib/metodos_equipo.py)
+  * se elimina la "librería del equipo" (celdas 17-18): los métodos ahora
+    vienen OCULTOS en el motor (profe/core/metodos.py)
+  * selección de métodos: un solo WIDGET selector, con validación en vivo
+  * gráficas: interactivas con plotly (tools/visualizar.py)
   * calificación: solo la SELECCIÓN de métodos (lo demás se revisa a mano)
+  * se renumeran las secciones 4-9 para que queden consecutivas
 
 Uso:  python tools/generar_notebook.py
 """
@@ -246,50 +250,145 @@ else:
 '''
 
 CELDA_METODOS = '''\
-# @title Registro de métodos del equipo (TU SELECCIÓN — esto es lo que se autocalifica)
-# Los métodos YA están implementados en lib/metodos_equipo.py. Aquí solo eliges
-# CUÁLES quieres comparar. Para eso comenta (con #) o borra los que NO quieras.
+# @title 🎛️ Elige los métodos (selector) — esto es lo que se autocalifica
+# Los métodos YA vienen implementados en el motor: esta tarea es teórica, así
+# que no programas nada. Aquí solo eliges CUÁLES comparar, con el selector.
 #
-# Regla: deja en METODOS  →  TODOS los métodos sugeridos de tu caso (los ves en
-# la sección 3)  +  al menos UN método que NO esté sugerido (un contraejemplo,
-# para contrastar en tu informe). En los casos de SISTEMA solo hay 2 métodos y
-# ambos son sugeridos, así que ahí no se pide contraejemplo.
+# Deja marcados:  TODOS los métodos sugeridos de tu caso  +  al menos UN método
+# que NO esté sugerido (un contraejemplo, para contrastar en tu informe).
+# En los casos de SISTEMA no se pide contraejemplo: sus dos métodos ya son los
+# sugeridos.
+import ipywidgets as widgets
+from IPython.display import display
 
-if ES_SISTEMA:
-    METODOS = {
-        "Newton-Raphson multivariable":
-            lambda F, x0, x1, tol, it: equipo_lib.newton_sistema(F, x0, tol=tol, max_iter=it),
-        "Punto fijo modificado":
-            lambda F, x0, x1, tol, it: equipo_lib.punto_fijo_sistema(F, x0, tol=tol, max_iter=it),
-    }
-else:
-    METODOS = {
-        "Bisección":              lambda f, p0, p1, tol, it: equipo_lib.biseccion(f, p0, p1, tol, it),
-        "Falsa posición":         lambda f, p0, p1, tol, it: equipo_lib.falsa_posicion(f, p0, p1, tol, it),
-        "Punto fijo modificado":  lambda f, p0, p1, tol, it: equipo_lib.punto_fijo_modificado(f, p0, p1, tol, it),
-        "Punto fijo":             lambda f, p0, p1, tol, it: equipo_lib.punto_fijo(f, p0, tol=tol, max_iter=it),
-        "Newton-Raphson":         lambda f, p0, p1, tol, it: equipo_lib.newton_raphson(f, p0, tol=tol, max_iter=it),
-        "NR modificado":          lambda f, p0, p1, tol, it: equipo_lib.nr_modificado(f, p0, tol=tol, max_iter=it),
-        "Secante":                lambda f, p0, p1, tol, it: equipo_lib.secante(f, p0, p1, tol, it),
-        "Secante modificado":     lambda f, p0, p1, tol, it: equipo_lib.secante_modificada(f, p0, tol=tol, max_iter=it),
-        "Brent":                  lambda f, p0, p1, tol, it: equipo_lib.brent(f, p0, p1, tol, it),
-        "Müller":                 lambda f, p0, p1, tol, it: equipo_lib.muller(f, p0, p1, tol=tol, max_iter=it),
-        "Bairstow":               lambda f, p0, p1, tol, it: equipo_lib.bairstow(f, p0, p1, tol=tol, max_iter=it),
-    }
+_DISPONIBLES = mapa_metodos(es_sistema(TEMA))    # {nombre: método} (lo pone el motor)
+_SUGERIDOS = metodos_sugeridos_para(TEMA)
 
-print("Métodos seleccionados:")
-for _n in METODOS:
-    print("   %-30s familia: %s" % (_n, familia(_n)))
+SEL_METODOS = widgets.SelectMultiple(
+    options=list(_DISPONIBLES),
+    value=tuple(m for m in _SUGERIDOS if m in _DISPONIBLES),
+    description="Métodos",
+    rows=min(11, len(_DISPONIBLES)),
+    layout=widgets.Layout(width="440px"))
+BT_SUGERIDOS = widgets.Button(description="Volver a los sugeridos")
+OUT_METODOS = widgets.Output()
+METODOS = {}
 
-# Aviso (no califica): qué métodos sugeridos te faltan por seleccionar.
-_sug_norm = metodos_sugeridos_para(TEMA)
-print("\\nMétodos sugeridos de tu caso:", ", ".join(_sug_norm))
-for _m in _sug_norm:
-    print("   %-30s %s" % (_m, "✅ seleccionado" if _m in METODOS else "⚠️ no lo has seleccionado"))
+def _aplicar(*_):
+    """METODOS = solo los métodos que quedaron marcados en el selector."""
+    global METODOS
+    METODOS = {n: _DISPONIBLES[n] for n in SEL_METODOS.value}
+    with OUT_METODOS:
+        OUT_METODOS.clear_output()
+        if not METODOS:
+            print("⚠️ No has seleccionado ningún método.")
+            return
+        for _n in METODOS:
+            print("   %s %-28s familia: %s"
+                  % ("⭐" if _n in _SUGERIDOS else "·", _n, familia(_n)))
+        _faltan = [m for m in _SUGERIDOS if m not in METODOS]
+        _extra = [n for n in METODOS if n not in _SUGERIDOS]
+        print()
+        if _faltan:
+            print("⚠️ Te faltan métodos sugeridos: " + ", ".join(_faltan))
+        else:
+            print("✅ Incluyes todos los métodos sugeridos.")
+        if _extra:
+            print("· Contraejemplos (no sugeridos): " + ", ".join(_extra))
+        elif not es_sistema(TEMA):
+            print("⚠️ Agrega al menos un método NO sugerido (un contraejemplo).")
+
+def _poner_sugeridos(_):
+    SEL_METODOS.value = tuple(m for m in _SUGERIDOS if m in _DISPONIBLES)
+
+SEL_METODOS.observe(_aplicar, names="value")
+BT_SUGERIDOS.on_click(_poner_sugeridos)
+display(widgets.HBox([widgets.VBox([SEL_METODOS, BT_SUGERIDOS]), OUT_METODOS]))
+_aplicar()
+'''
+
+CELDA_MD_SECCION4 = '''\
+---
+# 4. Definición simbólica del problema
+
+Con `sympy` el motor construye la función de tu caso y su **derivada** (o el **Jacobiano**,
+si es un sistema), y las convierte en funciones rápidas con `lambdify`. Esta celda solo las
+**muestra**, para que veas con qué expresión vas a trabajar.
+
+> 📝 **Sobre los nombres.** En el **código** las variables se llaman con letras normales
+> (`th1`, `omega`, `eps`), pero **en pantalla** se muestran como notación matemática
+> ($\\theta_1$, $\\omega$, $\\varepsilon$). Es el mismo símbolo: en el código usa siempre el
+> nombre normal.
+'''
+
+CELDA_MD_SECCION5 = '''\
+---
+# 5. Elige los métodos que vas a comparar
+
+Esta tarea es **teórica**: los métodos **ya vienen implementados** en el motor, así que no
+programas nada. Tu trabajo es **elegir cuáles comparar** y **leer las gráficas**.
+
+En el selector de abajo deja marcados:
+
+1. **todos** los métodos **sugeridos** de tu caso (los viste en la sección 3), y
+2. **al menos un contraejemplo**: un método que **no** esté sugerido, para contrastar en tu
+   informe por qué en tu caso rinde distinto.
+
+> 💡 Con `Ctrl` (Windows/Linux) o `Cmd` (Mac) seleccionas varios a la vez. El recuadro de la
+> derecha te dice **en vivo** si tu selección cumple la regla. En los casos de **sistema**
+> (T14, T15, T19) no se pide contraejemplo: sus dos métodos ya son los sugeridos.
+'''
+
+CELDA_MD_SECCION6 = '''\
+---
+# 6. Simulación de Monte Carlo
+
+Se perturban los parámetros del caso (incertidumbre real) y se corre **cada método** sobre
+las **mismas** $N$ muestras. Después se compara cada resultado contra la **raíz de
+referencia** (el *oráculo*), muestra por muestra.
+
+> La incertidumbre simula tolerancias de componentes, ruido de sensores, variación de
+> fabricación y errores al *aislar* la raíz.
+'''
+
+CELDA_MD_SECCION7 = '''\
+---
+# 7. Gráficos de desempeño
+
+Primero el **histograma comparativo** y la **tasa de divergencia**; luego el
+**box plot** (la vista más informativa) y la **distribución de la respuesta física**.
+
+> 🖱️ Las gráficas son **interactivas**: acerca con la rueda, **selecciona puntos** con la caja
+> o el lazo, y descarga la imagen con el icono de cámara.
+'''
+
+CELDA_MD_SECCION8 = '''\
+---
+# 8. Conclusiones de ingeniería
+
+El notebook calcula dos respuestas a partir de **tus propios resultados** y te recuerda las
+tres preguntas conceptuales. Todas se entregan en el **informe**; el profesor las revisa.
+
+> 🎓 **La pregunta de la exposición:** *"Si estuvieran diseñando el firmware del controlador
+> de este sistema mecatrónico en tiempo real, ¿qué método programarían y por qué?"*
+'''
+
+CELDA_MD_SECCION9 = '''\
+---
+# 9. Calificación automática y envío
+
+Lo **único** que se califica solo es la **selección de métodos**: que hayas incluido los
+**sugeridos** de tu caso y al menos un **contraejemplo**. El resto (informe, interpretación de
+las gráficas y exposición) lo evalúa el **profesor a mano**.
+
+Al enviar se reporta al servidor **qué métodos usaste** y si la selección fue correcta.
 '''
 
 CELDA_MC = '''\
 # @title Ejecutar Monte Carlo
+if not METODOS:
+    raise ValueError("Primero elige al menos un método con el selector (sección 5).")
+
 N_MC = 1000                              # tamaño de la simulación
 SEMILLA_EQUIPO = semilla(TEMA, NC_JEFE)  # misma semilla para todos los métodos
 
@@ -411,18 +510,28 @@ else:
 print("\\n--- Guarda el notebook en Drive (Archivo → Guardar) ---")
 '''
 
-# Índices de celdas del notebook ORIGINAL que se conservan sin cambios.
-CONSERVAR = {0, 1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 22, 24, 26, 30, 32}
+# Celdas del notebook ORIGINAL que se conservan tal cual.
+CONSERVAR = {0, 1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 20}
+
+# Celdas del notebook ORIGINAL que se DESCARTAN (ya no aplican).
+#   17-18: la "librería del equipo" (los métodos ahora vienen del motor).
+ELIMINAR = {17, 18}
 
 REEMPLAZOS = {
     2: ("code", CELDA_CONFIG),
+    19: ("markdown", CELDA_MD_SECCION4),
     21: ("code", CELDA_AISLAR),
+    22: ("markdown", CELDA_MD_SECCION5),
     23: ("code", CELDA_METODOS),
+    24: ("markdown", CELDA_MD_SECCION6),
     25: ("code", CELDA_MC),
+    26: ("markdown", CELDA_MD_SECCION7),
     27: ("code", CELDA_HIST),
     28: ("code", CELDA_BOX),
     29: ("code", CELDA_DIST),
+    30: ("markdown", CELDA_MD_SECCION8),
     31: ("code", CELDA_CRITERIO),
+    32: ("markdown", CELDA_MD_SECCION9),
     33: ("code", CELDA_CALIFICAR),
 }
 
@@ -433,6 +542,8 @@ def generar():
 
     celdas_nuevas = []
     for i, celda in enumerate(nb["cells"]):
+        if i in ELIMINAR:
+            continue
         if i in REEMPLAZOS:
             tipo, fuente = REEMPLAZOS[i]
             celdas_nuevas.append(_celda(tipo, fuente))

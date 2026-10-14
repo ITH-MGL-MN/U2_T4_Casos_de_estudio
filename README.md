@@ -23,8 +23,10 @@ exacto.
 Esta entrega adopta el **formato más reciente** (heredero de `U2_T3B`) y simplifica la
 calificación:
 
-* **Los métodos ya están programados** en [`lib/metodos_equipo.py`](lib/metodos_equipo.py). El
-  equipo ya **no los implementa**: solo los **selecciona** y los **interpreta**.
+* **Los métodos ya están implementados** y viven **dentro del motor** (`profe/core/metodos.py`),
+  así que quedan **ocultos**: el equipo no los programa. La tarea es **teórica**.
+* **La selección es con un widget**: un solo **selector** en el cuaderno elige qué métodos
+  comparar, con validación en vivo.
 * **Las gráficas son interactivas** (plotly): se pueden **seleccionar puntos** (caja y lazo),
   hacer zoom, ver valores al pasar el cursor y **descargar** la imagen.
 * **Lo único que se autocalifica** es que el equipo haya **seleccionado al menos los métodos
@@ -43,10 +45,10 @@ U2_T4_Casos_de_estudio/
 ├── lib/
 │   ├── matlab_like.py       preludio estilo MATLAB
 │   ├── robomat.py           atajos de robótica (matrices, sympy)
-│   └── metodos_equipo.py    MÉTODOS YA IMPLEMENTADOS (solo los solvers)
+│   └── (sin métodos: ahora viven ocultos en el motor)
 ├── profe/
 │   ├── config.py            lectura de config/ (embebida en el bundle)
-│   ├── core/                catálogo, modelos, oráculo, Monte Carlo, evaluador
+│   ├── core/                catálogo, modelos, oráculo, métodos, Monte Carlo, evaluador
 │   └── ui/cuaderno.py       la API pública del motor (`__all__`)
 ├── tools/
 │   ├── build.py             empaqueta grader_local.py + grader_ofuscado.txt
@@ -122,37 +124,29 @@ Solo el **jefe de equipo** ejecuta estas celdas, y **una sola vez**:
 
 1. El jefe **descarga el repositorio** (el notebook lo hace solo en la primera celda) y
    **comparte la carpeta** `CursoMN/U2_T4_Casos_de_estudio` con su equipo.
-2. Dentro de esa carpeta está **`lib/metodos_equipo.py`**: la **librería del equipo**, con los
-   métodos **ya implementados**. Las **gráficas plotly** viven aparte, en `tools/visualizar.py`.
-3. Esa librería se **importa** desde el notebook, así que todo el equipo trabaja sobre el mismo
-   código.
+2. Dentro de esa carpeta está el **motor** (oculto, en el bundle) y las **gráficas plotly**
+   (`tools/visualizar.py`). Los métodos **ya vienen implementados** y no se editan.
+3. Todo el equipo abre el **mismo cuaderno** y trabaja con la **misma** simulación.
 
 ---
 
-## 4. La librería del equipo (`lib/metodos_equipo.py`)
+## 4. Los métodos (ya vienen resueltos)
 
-**Los métodos ya están programados.** El equipo solo tiene que:
+**Los métodos ya están implementados y ocultos** dentro del motor
+(`profe/core/metodos.py`, que viaja en el bundle). El equipo **no programa nada**: esta tarea
+es **teórica**. Lo único que hace es:
 
-1. **Seleccionar** en el notebook qué métodos quiere comparar (eso es lo que se autocalifica).
+1. **Elegir con un widget** qué métodos comparar (eso es lo que se autocalifica).
 2. Ejecutar la simulación de Monte Carlo.
 3. **Interpretar** las gráficas interactivas de `tools/visualizar.py`.
 
-Los métodos respetan el contrato:
+Los métodos disponibles para el selector son: **Bisección, Falsa posición, Punto fijo
+modificado, Punto fijo, Newton-Raphson, NR modificado, Secante, Secante modificado, Brent,
+Müller, Bairstow** y, en los casos de **sistema**, **Newton-Raphson multivariable** y
+**Punto fijo modificado**.
 
-```python
-# Una ecuación
-g(f, p0, p1, tol, max_iter) -> (raiz, n_iter)
-
-# Sistemas de ecuaciones
-g(F, x0, _x1, tol, max_iter) -> (vector_raiz, n_iter)
-```
-
-La librería trae: **Bisección, Falsa posición, Punto fijo modificado, Punto fijo,
-Newton-Raphson, NR modificado, Secante, Secante modificado, Brent, Müller, Bairstow,
-Newton-Raphson multivariable y Punto fijo (sistema)**.
-
-> 🧪 `python metodos_equipo.py` corre el banco de pruebas local (con $x^2-2$) para que veas que
-> todos los métodos convergen antes de abrir Colab.
+> 🧪 El banco de pruebas del motor se corre con `python -m profe.core.metodos` (material del
+> profesor, con $x^2-2$).
 
 ---
 
@@ -194,6 +188,12 @@ componentes, ruido de sensores, variación de fabricación y errores al *aislar*
 Todas las gráficas permiten **seleccionar puntos** (herramienta de caja y de lazo), hacer
 zoom con la rueda, ver valores al pasar el cursor y **descargar** la imagen (icono de cámara o
 `visualizar.guardar_html`). Las genera `tools/visualizar.py`.
+
+> ⚙️ **Rendimiento.** El **oráculo** (calcular la raíz de referencia muestra por muestra) se
+> lleva ~84 % del tiempo; los métodos son ~1 %. Por eso el único ajuste que se nota es
+> `monte_carlo.n_scan_oraculo` en `config/config.yaml` (500 puntos por defecto): da la **misma**
+> raíz que 2000 (coincide a 1e-14) pero **4× más rápido**. La simulación completa de N=1000 baja
+> de ~4.6 s a ~1.8 s. Si necesitas más margen, súbelo; si el equipo tiene prisa, bájalo.
 
 ---
 
@@ -438,8 +438,8 @@ Orden recomendado antes de publicar:
 No. Usen la celda **Eliminar equipo** (con `PERMITIR_ELIMINAR = True`) y empiecen de nuevo.
 
 **¿Tengo que programar los métodos?**
-No. Ya están implementados en `lib/metodos_equipo.py`. Solo los **seleccionas** y los
-**interpretas**.
+No. Ya están implementados (y **ocultos**) dentro del motor. Solo los **seleccionas con el
+widget** y **interpretas** las gráficas.
 
 **¿Tengo que recalcular el intervalo en cada escenario?**
 No. Las perturbaciones son pequeñas; el intervalo que aíslen una vez sirve para toda la

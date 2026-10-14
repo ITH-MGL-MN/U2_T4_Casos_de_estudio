@@ -33,8 +33,8 @@ MODULOS = [
     'profe/core/catalogo.py',
     'profe/core/modelos.py',
     'profe/core/oraculo.py',
+    'profe/core/metodos.py',
     'profe/core/montecarlo.py',
-    'profe/core/solvers.py',
     'profe/core/evaluator.py',
     'profe/ui/cuaderno.py',
 ]

@@ -56,3 +56,7 @@ seleccion:
 monte_carlo:
   N: 1000                          # muestras de la simulación
   umbral_exito: 0.80               # % de aciertos para que un método "cuente"
+  # Puntos del escaneo del oráculo (la raíz de referencia por muestra). Con 500
+  # sale IDÉNTICA a 1e-14 que con 2000, pero ~4x más rápido; el oráculo es el
+  # 84% del tiempo de la simulación, así que aquí está la única ganancia real.
+  n_scan_oraculo: 500
