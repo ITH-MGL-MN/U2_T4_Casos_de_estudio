@@ -240,6 +240,14 @@ intervalo que **encierre la raíz**:
 > **mismo** par de valores vale para las 1000 muestras y, como la incertidumbre del caso mueve
 > la raíz mucho menos que el ancho del intervalo, siempre la contiene.
 
+> ⚠️ **Cuidado con un intervalo demasiado angosto.** No basta con encerrar la raíz **nominal**
+> (el cruce que ves en la gráfica): la incertidumbre **mueve** la raíz de una muestra a otra. En
+> T4 la raíz nominal es $1126.0$ K, pero con $\pm1\%$ en $c_p^*$ se mueve en
+> $[900.4,\ 1532.0]$ K. Un intervalo estrecho alrededor del cruce —por ejemplo $(1120, 1130)$—
+> sí encierra la raíz nominal, pero falla en el **$95\%$** de las muestras. El intervalo debe
+> cubrir **todo el rango** en el que puede caer la raíz; la celda de «Aísla la raíz» imprime ese
+> rango (calculado sobre escenarios reales) y avisa si tu intervalo no lo cubre.
+
 ### Tu arranque: `MIS_ARRANQUES`
 
 En la misma celda de la sección 4 está `MIS_ARRANQUES`, que hace lo mismo pero para los métodos
