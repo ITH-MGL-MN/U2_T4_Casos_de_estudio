@@ -25,8 +25,8 @@ calificación:
 
 * **Los métodos ya están implementados** y viven **dentro del motor** (`profe/core/metodos.py`),
   así que quedan **ocultos**: el equipo no los programa. La tarea es **teórica**.
-* **La selección es con un widget**: un solo **selector** en el cuaderno elige qué métodos
-  comparar, con validación en vivo.
+* **La selección es con casillas**: **marcas** qué métodos comparar (una casilla por método,
+  agrupadas por familia), sin `Ctrl` ni atajos.
 * **Las gráficas son interactivas** (plotly): se pueden **seleccionar puntos** (caja y lazo),
   hacer zoom, ver valores al pasar el cursor y **descargar** la imagen.
 * **Lo único que se autocalifica** es que el equipo haya **seleccionado al menos los métodos
@@ -136,11 +136,11 @@ Solo el **jefe de equipo** ejecuta estas celdas, y **una sola vez**:
 (`profe/core/metodos.py`, que viaja en el bundle). El equipo **no programa nada**: esta tarea
 es **teórica**. Lo único que hace es:
 
-1. **Elegir con un widget** qué métodos comparar (eso es lo que se autocalifica).
+1. **Marcar las casillas** de qué métodos comparar (eso es lo que se autocalifica).
 2. Ejecutar la simulación de Monte Carlo.
 3. **Interpretar** las gráficas interactivas de `tools/visualizar.py`.
 
-Los métodos disponibles para el selector son: **Bisección, Falsa posición, Punto fijo
+Los métodos disponibles para las casillas son: **Bisección, Falsa posición, Punto fijo
 modificado, Punto fijo, Newton-Raphson, NR modificado, Secante, Secante modificado, Brent,
 Müller, Bairstow** y, en los casos de **sistema**, **Newton-Raphson multivariable** y
 **Punto fijo modificado**.
@@ -438,8 +438,8 @@ Orden recomendado antes de publicar:
 No. Usen la celda **Eliminar equipo** (con `PERMITIR_ELIMINAR = True`) y empiecen de nuevo.
 
 **¿Tengo que programar los métodos?**
-No. Ya están implementados (y **ocultos**) dentro del motor. Solo los **seleccionas con el
-widget** y **interpretas** las gráficas.
+No. Ya están implementados (y **ocultos**) dentro del motor. Solo **marcas las casillas** de
+qué métodos comparar y **interpretas** las gráficas.
 
 **¿Tengo que recalcular el intervalo en cada escenario?**
 No. Las perturbaciones son pequeñas; el intervalo que aíslen una vez sirve para toda la

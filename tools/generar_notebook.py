@@ -250,12 +250,12 @@ else:
 '''
 
 CELDA_METODOS = '''\
-# @title 🎛️ Elige los métodos (selector) — esto es lo que se autocalifica
+# @title 🎛️ Elige los métodos (marca las casillas) — esto es lo que se autocalifica
 # Los métodos YA vienen implementados en el motor: esta tarea es teórica, así
-# que no programas nada. Aquí solo eliges CUÁLES comparar, con el selector.
+# que no programas nada. Aquí solo eliges CUÁLES comparar.
 #
-# Deja marcados:  TODOS los métodos sugeridos de tu caso  +  al menos UN método
-# que NO esté sugerido (un contraejemplo, para contrastar en tu informe).
+# Marca las casillas:  TODOS los métodos sugeridos de tu caso  +  al menos UN
+# método que NO esté sugerido (un contraejemplo, para contrastar en tu informe).
 # En los casos de SISTEMA no se pide contraejemplo: sus dos métodos ya son los
 # sugeridos.
 import ipywidgets as widgets
@@ -264,24 +264,37 @@ from IPython.display import display
 _DISPONIBLES = mapa_metodos(es_sistema(TEMA))    # {nombre: método} (lo pone el motor)
 _SUGERIDOS = metodos_sugeridos_para(TEMA)
 
-SEL_METODOS = widgets.SelectMultiple(
-    options=list(_DISPONIBLES),
-    value=tuple(m for m in _SUGERIDOS if m in _DISPONIBLES),
-    description="Métodos",
-    rows=min(11, len(_DISPONIBLES)),
-    layout=widgets.Layout(width="440px"))
-BT_SUGERIDOS = widgets.Button(description="Volver a los sugeridos")
+# Una casilla por método, agrupadas por familia para que se lean de un vistazo.
+_FAMILIAS_UI = [("cerrado", "Cerrados (intervalo)"), ("abierto", "Abiertos"),
+                ("hibrido", "Híbrido"), ("polinomios", "Polinomios"),
+                ("desconocida", "Otros")]
+
+CASILLAS = {}
+_columnas = []
+for _clave, _titulo in _FAMILIAS_UI:
+    _miembros = [n for n in _DISPONIBLES if familia(n) == _clave]
+    if not _miembros:
+        continue
+    _cajas = [widgets.HTML("<b>%s</b>" % _titulo)]
+    for _n in _miembros:
+        _cajas.append(widgets.Checkbox(value=(_n in _SUGERIDOS), description=_n,
+                                       indent=False,
+                                       layout=widgets.Layout(width="290px")))
+        CASILLAS[_n] = _cajas[-1]
+    _columnas.append(widgets.VBox(_cajas))
+
+BT_SUGERIDOS = widgets.Button(description="Marcar solo los sugeridos")
 OUT_METODOS = widgets.Output()
 METODOS = {}
 
 def _aplicar(*_):
-    """METODOS = solo los métodos que quedaron marcados en el selector."""
+    """METODOS = solo los métodos cuyas casillas están marcadas."""
     global METODOS
-    METODOS = {n: _DISPONIBLES[n] for n in SEL_METODOS.value}
+    METODOS = {n: _DISPONIBLES[n] for n in _DISPONIBLES if CASILLAS[n].value}
     with OUT_METODOS:
         OUT_METODOS.clear_output()
         if not METODOS:
-            print("⚠️ No has seleccionado ningún método.")
+            print("⚠️ No has marcado ningún método.")
             return
         for _n in METODOS:
             print("   %s %-28s familia: %s"
@@ -298,12 +311,17 @@ def _aplicar(*_):
         elif not es_sistema(TEMA):
             print("⚠️ Agrega al menos un método NO sugerido (un contraejemplo).")
 
-def _poner_sugeridos(_):
-    SEL_METODOS.value = tuple(m for m in _SUGERIDOS if m in _DISPONIBLES)
+def _marcar_sugeridos(_):
+    for _n, _cas in CASILLAS.items():
+        _cas.value = (_n in _SUGERIDOS)
 
-SEL_METODOS.observe(_aplicar, names="value")
-BT_SUGERIDOS.on_click(_poner_sugeridos)
-display(widgets.HBox([widgets.VBox([SEL_METODOS, BT_SUGERIDOS]), OUT_METODOS]))
+for _cas in CASILLAS.values():
+    _cas.observe(_aplicar, names="value")
+BT_SUGERIDOS.on_click(_marcar_sugeridos)
+
+display(widgets.HBox(_columnas, layout=widgets.Layout(grid_gap="16px")))
+display(BT_SUGERIDOS)
+display(OUT_METODOS)
 _aplicar()
 '''
 
@@ -328,15 +346,16 @@ CELDA_MD_SECCION5 = '''\
 Esta tarea es **teórica**: los métodos **ya vienen implementados** en el motor, así que no
 programas nada. Tu trabajo es **elegir cuáles comparar** y **leer las gráficas**.
 
-En el selector de abajo deja marcados:
+En las casillas de abajo **marca**:
 
 1. **todos** los métodos **sugeridos** de tu caso (los viste en la sección 3), y
 2. **al menos un contraejemplo**: un método que **no** esté sugerido, para contrastar en tu
    informe por qué en tu caso rinde distinto.
 
-> 💡 Con `Ctrl` (Windows/Linux) o `Cmd` (Mac) seleccionas varios a la vez. El recuadro de la
-> derecha te dice **en vivo** si tu selección cumple la regla. En los casos de **sistema**
-> (T14, T15, T19) no se pide contraejemplo: sus dos métodos ya son los sugeridos.
+Las casillas están agrupadas **por familia** (cerrados, abiertos, híbrido, polinomios) para que
+veas de inmediato qué estás comparando. El recuadro de la derecha te dice **en vivo** si tu
+selección cumple la regla. En los casos de **sistema** (T14, T15, T19) no se pide contraejemplo:
+sus dos métodos ya son los sugeridos.
 '''
 
 CELDA_MD_SECCION6 = '''\
