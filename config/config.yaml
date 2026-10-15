@@ -51,7 +51,6 @@ seleccion:
   min_contraejemplos: 1            # solo se exige en casos ESCALARES (los de
                                    # SISTEMA tienen 2 opciones y ambas son
                                    # sugeridas, así que quedan exentos)
-  min_familias_distintas: 3        # mínimo de familias representadas (cerrado/abierto/híbrido/polinomios)
 
 monte_carlo:
   N: 1000                          # muestras de la simulación
